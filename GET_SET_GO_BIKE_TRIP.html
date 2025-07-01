@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Bike Trip Planner: Bhubaneswar to Budhakhola</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Roadtrip (Warm neutrals like beige/off-white with earthy green and terracotta accents) -->
+    <!-- Application Structure Plan: A single-page, vertical scrolling layout with a sticky top navigation for quick access to key sections (Itinerary, Attractions, Food, Biker Essentials). The core is a visual timeline for the itinerary, which is more engaging than plain text. An interactive checklist for essentials and a doughnut chart visualizing time allocation are included to enhance user interaction and data comprehension. This structure prioritizes a task-oriented user flow (what's next, what do I need?) over the linear format of the source report, making it more practical for a biker on the go. -->
+    <!-- Visualization & Content Choices: 1. Itinerary -> Goal: Organize/Change -> Viz: Vertical Timeline (HTML/CSS) -> Interaction: Scroll-to -> Justification: Visually tracks the day's progression clearly. 2. Time Allocation -> Goal: Compare -> Viz: Doughnut Chart (Chart.js) -> Interaction: Hover Tooltips -> Justification: Provides a quick, digestible overview of how the day is spent. 3. Biker Essentials -> Goal: Inform/Organize -> Viz: Interactive Checklist (HTML/JS) -> Interaction: Check/Uncheck -> Justification: Creates a useful, engaging tool for preparation. 4. Attractions -> Goal: Inform -> Viz: Card Grid (HTML/CSS) -> Interaction: Hover effects -> Justification: Clean, scannable presentation of key locations. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #374151;
+        }
+        .font-roboto-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 1.25rem;
+            bottom: -1.25rem;
+            width: 2px;
+            background-color: #D1D5DB;
+        }
+        .timeline-item:last-child::before {
+            display: none;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 1.25rem;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+        }
+        .nav-link.active {
+            color: #D97706;
+            border-bottom-color: #D97706;
+        }
+        .checklist-item input:checked + span {
+            text-decoration: line-through;
+            color: #9CA3AF;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 320px;
+            width: 100%;
+            max-width: 320px;
+        }
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 360px;
+                max-width: 360px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#FDFBF8]">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-amber-600">🏍️ Bike Trip Planner</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#itinerary" class="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-amber-600 border-b-2 border-transparent">Itinerary</a>
+                        <a href="#attractions" class="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-amber-600 border-b-2 border-transparent">Attractions</a>
+                        <a href="#food" class="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-amber-600 border-b-2 border-transparent">Food Plan</a>
+                        <a href="#essentials" class="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-amber-600 border-b-2 border-transparent">Biker Essentials</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block w-full p-2.5">
+                        <option value="#itinerary">Itinerary</option>
+                        <option value="#attractions">Attractions</option>
+                        <option value="#food">Food Plan</option>
+                        <option value="#essentials">Biker Essentials</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <section id="hero" class="text-center py-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">Bhubaneswar to Budhakhola</h1>
+            <p class="mt-4 text-lg text-gray-600">An Interactive Group Bike Trip Plan</p>
+            <div class="mt-8 flex flex-wrap justify-center gap-4 text-gray-800">
+                <div class="bg-amber-100 rounded-full px-4 py-2 text-sm font-semibold">📍 Destination: Budhakhola, Ganjam</div>
+                <div class="bg-emerald-100 rounded-full px-4 py-2 text-sm font-semibold">🛣️ Distance: ~160 km (one way)</div>
+                <div class="bg-sky-100 rounded-full px-4 py-2 text-sm font-semibold">⏳ Riding Time: 4-5 hours</div>
+            </div>
+        </section>
+
+        <section id="itinerary" class="py-12">
+            <h2 class="text-3xl font-bold text-center mb-10">Trip Itinerary & Timeline</h2>
+            <div class="max-w-3xl mx-auto">
+                <div class="relative pl-8">
+                    
+                    <div class="timeline-item mb-10">
+                        <div class="timeline-dot bg-amber-500 ring-8 ring-white flex items-center justify-center">
+                            <span class="text-white font-bold">1</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="font-roboto-mono text-amber-600 font-semibold">5:30 AM - 8:30 AM</h3>
+                            <h4 class="text-xl font-bold mt-1">Morning Start & Breakfast</h4>
+                            <p class="mt-2 text-gray-600">Assemble at a designated point in Bhubaneswar for briefing. Depart by 5:45 AM via NH16. Stop for a hearty breakfast at a dhaba near Khurda.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item mb-10">
+                         <div class="timeline-dot bg-emerald-500 ring-8 ring-white flex items-center justify-center">
+                            <span class="text-white font-bold">2</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="font-roboto-mono text-emerald-600 font-semibold">8:30 AM - 11:30 AM</h3>
+                            <h4 class="text-xl font-bold mt-1">Scenic Ride to Budhakhola</h4>
+                            <p class="mt-2 text-gray-600">Continue on NH16, then take NH59 towards Buguda. Enjoy the changing landscapes and take a short stretch break midway. Arrive at Budhakhola by 11:30 AM.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item mb-10">
+                         <div class="timeline-dot bg-sky-500 ring-8 ring-white flex items-center justify-center">
+                            <span class="text-white font-bold">3</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="font-roboto-mono text-sky-600 font-semibold">11:30 AM - 3:00 PM</h3>
+                            <h4 class="text-xl font-bold mt-1">Exploration & Lunch</h4>
+                            <p class="mt-2 text-gray-600">Explore Budhakhola's attractions: the waterfall, Panchu Mahadeva Temple, and ancient caves. Break for lunch at a local eatery in Buguda or enjoy a pre-packed picnic.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item mb-10">
+                         <div class="timeline-dot bg-purple-500 ring-8 ring-white flex items-center justify-center">
+                            <span class="text-white font-bold">4</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="font-roboto-mono text-purple-600 font-semibold">3:00 PM - 5:30 PM</h3>
+                            <h4 class="text-xl font-bold mt-1">Optional Trips & Evening Snack</h4>
+                            <p class="mt-2 text-gray-600">Choose an optional nearby visit (like Taratarini Temple) if time permits. Grab an evening snack and tea before starting the return journey.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                         <div class="timeline-dot bg-rose-500 ring-8 ring-white flex items-center justify-center">
+                            <span class="text-white font-bold">5</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="font-roboto-mono text-rose-600 font-semibold">5:30 PM onwards</h3>
+                            <h4 class="text-xl font-bold mt-1">Return Journey</h4>
+                            <p class="mt-2 text-gray-600">Begin the ride back to Bhubaneswar. Ride carefully as dusk approaches. Approximate arrival time is 9:00 PM.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="attractions" class="py-12 bg-white rounded-xl">
+            <h2 class="text-3xl font-bold text-center mb-10">Key Attractions</h2>
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <p>Budhakhola is a site of natural beauty and spiritual significance. After the ride, take your time to explore these key spots. For those with extra time, nearby destinations offer further adventure.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="border rounded-lg p-6 hover:shadow-lg transition-shadow bg-gray-50">
+                    <h3 class="text-xl font-bold">🌊 Budhakhol Waterfall</h3>
+                    <p class="mt-2">A refreshing perennial waterfall, perfect for relaxing after a long ride. The water is believed to have medicinal properties.</p>
+                </div>
+                <div class="border rounded-lg p-6 hover:shadow-lg transition-shadow bg-gray-50">
+                    <h3 class="text-xl font-bold">⛩️ Panchu Mahadeva Temple</h3>
+                    <p class="mt-2">A group of five ancient Shiva temples on a hill. Can be reached by stairs or road.</p>
+                </div>
+                <div class="border rounded-lg p-6 hover:shadow-lg transition-shadow bg-gray-50">
+                    <h3 class="text-xl font-bold">⛰️ Ancient Caves</h3>
+                    <p class="mt-2">Explore Siddha Gumpha and Dayana, caves once used by Buddhist monks for meditation.</p>
+                </div>
+                <div class="border rounded-lg p-6 hover:shadow-lg transition-shadow bg-amber-50 col-span-1 md:col-span-2 lg:col-span-3">
+                     <h3 class="text-xl font-bold">Optional Nearby Trips</h3>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <p><b>Taratarini Temple:</b> Approx. 50-60 km away. A highly revered Shakti Peetha.</p>
+                        <p><b>Nirmaljhar Stream:</b> A peaceful spot with another waterfall and temple.</p>
+                        <p><b>Gopalpur Sea Beach:</b> Approx. 75 km away. A beautiful beach, but will extend your trip time.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 py-12">
+            <section id="food" class="lg:col-span-2 py-8 px-6 bg-white rounded-xl">
+                <h2 class="text-3xl font-bold text-center mb-6">🍔 Food & Fuel Plan</h2>
+                <p class="text-center mb-8">Staying energized is key. Here are the recommended options for your meals during the trip.</p>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-lg font-semibold text-amber-700">Breakfast (7:30 AM - 8:30 AM)</h4>
+                        <p class="mt-1 text-gray-600">Stop at a highway dhaba near Khurda on NH16. They offer ample parking and quick service with hot Aloo Parathas, Puri Sabji, etc.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-emerald-700">Lunch (1:30 PM - 3:00 PM)</h4>
+                        <p class="mt-1 text-gray-600"><b class="block">Option 1:</b> Eat at a local eatery in Buguda for an authentic Odia meal.</p>
+                        <p class="mt-1 text-gray-600"><b class="block">Option 2 (Recommended):</b> Pack a lunch to enjoy a picnic at the serene park by the pond at Budhakhola.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="chart-section" class="lg:col-span-3 py-8 px-6 bg-white rounded-xl">
+                 <h2 class="text-3xl font-bold text-center mb-6">Time Allocation</h2>
+                 <p class="text-center mb-4">A visual breakdown of your 15.5-hour day trip, from start to finish.</p>
+                 <div class="chart-container">
+                    <canvas id="tripTimeChart"></canvas>
+                 </div>
+            </section>
+        </div>
+
+        <section id="essentials" class="py-12">
+            <h2 class="text-3xl font-bold text-center mb-10">Biker's Essential Checklist</h2>
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-bold mb-4 border-b pb-2">🛡️ Safety First</h3>
+                    <ul class="space-y-3">
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Helmet (Rider & Pillion)</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Riding Jacket & Gloves</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Knee/Elbow Guards</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Valid Documents & License</span></label></li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-bold mb-4 border-b pb-2">🛠️ Bike & Tools</h3>
+                    <ul class="space-y-3">
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Full Tank of Fuel</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Checked Tire Pressure</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Basic Tool Kit</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Puncture Repair Kit</span></label></li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-bold mb-4 border-b pb-2">🎒 Personal Items</h3>
+                    <ul class="space-y-3">
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Water Bottles</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Energy Bars / Snacks</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Sunscreen & Sunglasses</span></label></li>
+                        <li class="checklist-item"><label class="flex items-center"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"> <span class="ml-3">Phone/Camera (in waterproof bag)</span></label></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center p-4 mt-8">
+        <p>Enjoy your thrilling and memorable bike ride to Budhakhola!</p>
+        <p class="text-xs text-gray-400 mt-2">Best experienced between July and February.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('tripTimeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Riding', 'Exploring', 'Food & Breaks'],
+                    datasets: [{
+                        label: 'Time Allocation (in hours)',
+                        data: [9, 4, 2.5],
+                        backgroundColor: [
+                            'rgb(34, 197, 94)',
+                            'rgb(59, 130, 246)',
+                            'rgb(217, 119, 6)'
+                        ],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 4,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 14,
+                                    family: "'Inter', sans-serif"
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + ' hours';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5 
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                const targetId = e.target.value;
+                document.querySelector(targetId).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
